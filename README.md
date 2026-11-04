@@ -13,7 +13,8 @@ so every command, parameter and description matches a real management server.
 | Path | What it is |
 |------|------------|
 | `postman/cloudstack.postman_collection.json` | Postman v2.1 collection, grouped by API tag, signing script included |
-| `openapi/cloudstack-openapi-3.0.json` | OpenAPI 3.0.3 spec (also importable into Postman, Insomnia, Swagger UI, …) |
+| `openapi/cloudstack-openapi.yaml` | Original OpenAPI 3.2 spec: open it in Swagger UI as API reference docs |
+| `openapi/cloudstack-openapi-3.0.json` | OpenAPI 3.0.3 version, for tools that don't support 3.1+ yet (Postman, Insomnia, …) |
 | `scripts/pre-request.js` | The collection-level signing script (for reference / reuse) |
 | `scripts/openapi_to_3_0.py` | Downgrades the generated OpenAPI 3.1/3.2 spec to 3.0.3 |
 | `scripts/build_collection.py` | Turns the converted collection into the final collection |
@@ -86,14 +87,30 @@ npx -y openapi-to-postmanv2@4 -s openapi/cloudstack-openapi-3.0.json -o /tmp/cs-
 python3 scripts/build_collection.py /tmp/cs-spec/raw.json postman/cloudstack.postman_collection.json
 ```
 
-Optional: browse the spec in Swagger UI:
+## Browse the API in Swagger UI
+
+`openapi/cloudstack-openapi.yaml` works as searchable API reference docs. From the repo root:
 
 ```bash
-docker run --rm -p 8088:8080 -e SWAGGER_JSON=/spec/cloudstack-openapi.yaml \
-  -e DOC_EXPANSION=none -e FILTER=true -e SUPPORTED_SUBMIT_METHODS='[]' \
-  -v /tmp/cs-spec:/spec docker.io/swaggerapi/swagger-ui
-# open http://localhost:8088
+docker run --rm -p 8088:8080 \
+  -e SWAGGER_JSON=/spec/cloudstack-openapi.yaml \
+  -e DOC_EXPANSION=none -e FILTER=true -e SHOW_EXTENSIONS=true \
+  -e SUPPORTED_SUBMIT_METHODS='[]' \
+  -v "$(pwd)/openapi":/spec docker.io/swaggerapi/swagger-ui
 ```
+
+Open http://localhost:8088 and use the filter box to search commands by tag (e.g. `VirtualMachine`).
+`SHOW_EXTENSIONS=true` shows CloudStack metadata such as `x-cloudstack-since` (the version a
+parameter was added in) and `x-cloudstack-related` (APIs that return a valid value for it).
+
+> "Try it out" is turned off on purpose (`SUPPORTED_SUBMIT_METHODS='[]'`). Swagger UI can't
+> compute CloudStack's HMAC signature, and the browser would block cross-origin calls to the
+> management server anyway. Use the Postman collection to actually send requests.
+
+No Docker? Paste the raw file URL into https://editor.swagger.io (**File → Import URL**):
+`https://raw.githubusercontent.com/kiranchavala/cloudstack-postman-collection/main/openapi/cloudstack-openapi.yaml`
+
+When regenerating (see above), copy `/tmp/cs-spec/cloudstack-openapi.yaml` into `openapi/` too.
 
 ## License
 
