@@ -26,9 +26,15 @@ info:
     identifier: Apache-2.0
   version: 4.23.0.0
 servers:
-- url: http://localhost:8080/client/api
+- url: http://localhost:8081/client/api
+  name: signing-proxy
+  description: Local signing proxy (scripts/signing_proxy.py / docker compose up). Signs requests for you.
+- url: '{endpoint}'
   name: cloudstack
-  description: CloudStack API endpoint, usually the management server plus `/client/api`.
+  description: CloudStack API endpoint directly, usually the management server plus `/client/api` (needs apiKey + signature).
+  variables:
+    endpoint:
+      default: http://localhost:8080/client/api
 security:
 - apiKey: []
   signature: []

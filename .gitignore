@@ -3,3 +3,4 @@ node_modules/
 *.ini
 *.postman_environment.json
 __pycache__/
+.env

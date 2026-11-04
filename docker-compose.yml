@@ -1,0 +1,35 @@
+# Swagger UI with working "Try it out" for Apache CloudStack.
+#   cp .env.example .env   # fill in endpoint + keys
+#   docker compose up
+#   open http://localhost:8088
+services:
+  signing-proxy:
+    image: python:3.12-alpine
+    command: python /app/signing_proxy.py
+    volumes:
+      - ./scripts/signing_proxy.py:/app/signing_proxy.py:ro
+    environment:
+      CS_ENDPOINT: ${CS_ENDPOINT:?set CS_ENDPOINT in .env}
+      CS_API_KEY: ${CS_API_KEY:?set CS_API_KEY in .env}
+      CS_SECRET_KEY: ${CS_SECRET_KEY:?set CS_SECRET_KEY in .env}
+      CS_VERIFY_TLS: ${CS_VERIFY_TLS:-true}
+      PROXY_HOST: 0.0.0.0
+      PROXY_PORT: "8081"
+      PYTHONUNBUFFERED: "1"
+    ports:
+      - "127.0.0.1:8081:8081"
+
+  swagger-ui:
+    image: swaggerapi/swagger-ui
+    environment:
+      SWAGGER_JSON: /spec/cloudstack-openapi.yaml
+      DOC_EXPANSION: none
+      FILTER: "true"
+      SHOW_EXTENSIONS: "true"
+      SUPPORTED_SUBMIT_METHODS: '["get"]'
+    volumes:
+      - ./openapi:/spec:ro
+    ports:
+      - "127.0.0.1:8088:8080"
+    depends_on:
+      - signing-proxy
